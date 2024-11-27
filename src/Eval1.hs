@@ -45,7 +45,8 @@ instance MonadState State where
 
 -- Ejercicio 1.b: Implementar el evaluador utilizando la monada State
 
--- Evalua un programa en el estado nulo
+-- Evalua un programa en el estado nulo. Al evaluar solo nos interesa el valor
+-- del estado.
 eval :: Comm -> Env
 eval p = snd (runState (stepCommStar p) initEnv)
 
@@ -53,13 +54,59 @@ eval p = snd (runState (stepCommStar p) initEnv)
 stepCommStar :: MonadState m => Comm -> m ()
 stepCommStar Skip = return ()
 stepCommStar c    = stepComm c >>= \c' -> stepCommStar c'
+-- ? Esto no se puede reescribir así?
+--stepCommStar c    = stepComm c >>= stepCommStar
+
 
 -- Evalua un paso de un comando
 stepComm :: MonadState m => Comm -> m Comm
-stepComm = undefined
+stepComm Skip                 = undefined -- No deberiamos llegar a esto
+stepComm (Let v e)            = do n <- evalExp e
+                                   update v n
+                                   return Skip
+
+stepComm (Seq Skip c1)        = return c1
+stepComm (Seq c0 c1)          = do c0' <- stepComm c0
+                                   return (Seq c0' c1)
+
+stepComm (IfThenElse b c0 c1) = do vb <- evalExp b
+                                   if vb then return c0 else return c1
+-- ? Que sementica le damos al Repeat. Como al repeat until o un while
+stepComm (Repeat b c)         = return (Seq c c')
+                                where c' = (IfThenElse b Skip (Repeat b c))
 
 -- Evalua una expresion
 evalExp :: MonadState m => Exp a -> m a
-evalExp = undefined
+evalExp (Const n)        = return n
+evalExp (Var x)          = lookfor x
+
+evalExp (UMinus e)       = evalUnary (negate) e 
+evalExp (Plus e0 e1)     = evalBinary (+)   e0 e1
+evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
+evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
+evalExp (Div e0 e1)      = evalBinary (div) e0 e1
+
+evalExp BTrue            = return True
+evalExp BFalse           = return False
+
+evalExp (Lt e0 e1)       = evalBinary (<) e0 e1
+evalExp (Gt e0 e1)       = evalBinary (>) e0 e1
+
+evalExp (And e0 e1)      = evalBinary (&&) e0 e1
+evalExp (Or e0 e1)       = evalBinary (||) e0 e1
+evalExp (Not e)          = evalUnary (not) e
+evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
+evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
+-- ? Que son estas dos cosas. En el tp no estaban
+evalExp (EAssgn x e)     = undefined 
+evalExp (ESeq e0 e1)     = undefined 
 
 
+evalBinary :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
+evalBinary op e0 e1 = do v0 <- evalExp e0
+                         v1 <- evalExp e1
+                         return (op v0 v1)
+
+evalUnary :: MonadState m => (a -> b) -> Exp a -> m b
+evalUnary op e = do v <- evalExp e
+                    return (op v)
