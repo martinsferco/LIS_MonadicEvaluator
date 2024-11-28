@@ -45,7 +45,8 @@ instance MonadState StateError where
                                  Nothing -> Left UndefVar
                                  Just x  -> return (x :!: s))
 
-  update v i = StateError (\s -> return (() :!: M.insert v i s))
+  update v i = StateError (\s -> return (() :!: s'))
+   where s' = M.insert v i s
 
 -- Ejercicio 2.c: Dar una instancia de MonadState para StateError:
 instance MonadError StateError where
@@ -87,7 +88,11 @@ evalExp (UMinus e)       = evalUnary (negate)  e
 evalExp (Plus e0 e1)     = evalBinary (+)   e0 e1
 evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
 evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
-evalExp (Div e0 e1)      = evalBinary (div) e0 e1
+-- Tenemos que analizar las divisiones por cero
+evalExp (Div e0 e1)      = do v0 <- evalExp e0
+                              v1 <- evalExp e1
+                              if v1 == 0 then throw DivByZero
+                                         else return (div v0 v1)
 
 
 evalExp (VarInc x)       = do n <- lookfor x
@@ -110,4 +115,13 @@ evalExp (Not e)          = evalUnary (not) e
 evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
 
+
+evalBinary :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
+evalBinary op e0 e1 = do v0 <- evalExp e0
+                         v1 <- evalExp e1
+                         return (op v0 v1)
+
+evalUnary :: MonadState m => (a -> b) -> Exp a -> m b
+evalUnary op e = do v <- evalExp e
+                    return (op v)
 
