@@ -85,8 +85,8 @@ evalExp (Div e0 e1)      = evalBinary (div) e0 e1
 
 
 evalExp (VarInc x)       = do n <- lookfor x
-                              update x (suc n)
-                              return (suc n)
+                              update x (succ n)
+                              return (succ n)
 
 evalExp (VarDec x)       = do n <- lookfor x
                               update x (pred n)

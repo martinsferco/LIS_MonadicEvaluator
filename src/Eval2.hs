@@ -45,8 +45,8 @@ instance MonadState StateError where
                                  Nothing -> Left UndefVar
                                  Just x  -> return (x :!: s))
 
-  update v i = StateError (\s -> return (() :!: s'))
-   where s' = M.insert v i s
+  update v i = StateError (\s -> return (() :!: update' v i s))
+   where update' = M.insert
 
 -- Ejercicio 2.c: Dar una instancia de MonadState para StateError:
 instance MonadError StateError where
@@ -55,8 +55,8 @@ instance MonadError StateError where
 -- Ejercicio 2.d: Implementar el evaluador utilizando la monada StateError.
 -- Evalua un programa en el estado nulo
 eval :: Comm -> Either Error Env
-eval p = runStateError (stepCommStar p) initEnv >>= \p ->
-         return (snd p)
+eval p = runStateError (stepCommStar p) initEnv >>= \(x :!: s) ->
+         return s
 
 -- Evalua multiples pasos de un comando, hasta alcanzar un Skip
 stepCommStar :: (MonadState m, MonadError m) => Comm -> m ()
@@ -88,7 +88,6 @@ evalExp (UMinus e)       = evalUnary (negate)  e
 evalExp (Plus e0 e1)     = evalBinary (+)   e0 e1
 evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
 evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
--- Tenemos que analizar las divisiones por cero
 evalExp (Div e0 e1)      = do v0 <- evalExp e0
                               v1 <- evalExp e1
                               if v1 == 0 then throw DivByZero
@@ -96,8 +95,8 @@ evalExp (Div e0 e1)      = do v0 <- evalExp e0
 
 
 evalExp (VarInc x)       = do n <- lookfor x
-                              update x (suc n)
-                              return (suc n)
+                              update x (succ n)
+                              return (succ n)
 
 evalExp (VarDec x)       = do n <- lookfor x
                               update x (pred n)
@@ -116,12 +115,12 @@ evalExp (Eq e0 e1)       = evalBinary (==) e0 e1
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
 
 
-evalBinary :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
+evalBinary :: (MonadState m, MonadError m) => (a -> a -> b) -> Exp a -> Exp a -> m b
 evalBinary op e0 e1 = do v0 <- evalExp e0
                          v1 <- evalExp e1
                          return (op v0 v1)
 
-evalUnary :: MonadState m => (a -> b) -> Exp a -> m b
+evalUnary :: (MonadState m, MonadError m) => (a -> b) -> Exp a -> m b
 evalUnary op e = do v <- evalExp e
                     return (op v)
 

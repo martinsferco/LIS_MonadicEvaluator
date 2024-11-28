@@ -2,6 +2,7 @@ module Monads where
 
 import           AST
 
+
 -- Clases de mónadas que proveen las operaciones necesarias
 -- para implementar los evaluadores.
 
@@ -20,4 +21,4 @@ class Monad m => MonadError m where
 -- Ejercicio 3.b: Dar una clase que provea las operaciones necesarias para
 -- llevar la traza de ejecución. Llamela MonadTrace.
 class Monad m => MonadTrace m where
-    write :: w -> m () 
+    write :: String -> m () 
