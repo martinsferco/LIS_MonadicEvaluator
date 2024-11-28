@@ -5,7 +5,7 @@ import           AST
 -- Clases de mónadas que proveen las operaciones necesarias
 -- para implementar los evaluadores.
 
--- Clase para representar mónadas con estado de variables
+-- Clase para representar mónadas con estado de variables (enteras)
 class Monad m => MonadState m where
     -- Busca el valor de una variable
     lookfor :: Variable -> m Int
@@ -19,4 +19,5 @@ class Monad m => MonadError m where
 
 -- Ejercicio 3.b: Dar una clase que provea las operaciones necesarias para
 -- llevar la traza de ejecución. Llamela MonadTrace.
--- COMPLETAR
+class Monad m => MonadTrace m where
+    write :: w -> m () 
