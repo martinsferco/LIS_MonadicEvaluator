@@ -84,13 +84,9 @@ evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
 evalExp (Div e0 e1)      = evalBinary (div) e0 e1
 
 
-evalExp (VarInc x)       = do n <- lookfor x
-                              update x (succ n)
-                              return (succ n)
+evalExp (VarInc x)       = modifyVariable x (succ)
+evalExp (VarDec x)       = modifyVariable x (pred)
 
-evalExp (VarDec x)       = do n <- lookfor x
-                              update x (pred n)
-                              return (pred n)
 
 evalExp BTrue            = return True
 evalExp BFalse           = return False
@@ -103,6 +99,15 @@ evalExp (Or e0 e1)       = evalBinary (||) e0 e1
 evalExp (Not e)          = evalUnary (not) e
 evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
+
+
+
+modifyVariable :: MonadState m => Variable -> (Int -> Int) -> m Int 
+modifyVariable x op = do n <- lookfor x
+                         (let n' = op n
+                          in (do update x n'
+                                 return n'))
+
 
 
 
