@@ -93,9 +93,6 @@ evalExp (Div e0 e1)      = do v0 <- evalExp e0
                               if v1 == 0 then throw DivByZero
                                          else return (div v0 v1)
 
-evalExp (VarInc x)       = modifyVariable x (succ)
-evalExp (VarDec x)       = modifyVariable x (pred)
-
 evalExp BTrue            = return True
 evalExp BFalse           = return False
 
@@ -107,15 +104,6 @@ evalExp (Or e0 e1)       = evalBinary (||) e0 e1
 evalExp (Not e)          = evalUnary (not) e
 evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
-
-
-
-modifyVariable :: (MonadState m, MonadError m) => Variable -> (Int -> Int) -> m Int 
-modifyVariable x op = do n <- lookfor x
-                         (let n' = op n
-                          in (do update x n'
-                                 return n'))
-
 
 
 evalBinary :: (MonadState m, MonadError m) => (a -> a -> b) -> Exp a -> Exp a -> m b

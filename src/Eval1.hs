@@ -83,11 +83,6 @@ evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
 evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
 evalExp (Div e0 e1)      = evalBinary (div) e0 e1
 
-
-evalExp (VarInc x)       = modifyVariable x (succ)
-evalExp (VarDec x)       = modifyVariable x (pred)
-
-
 evalExp BTrue            = return True
 evalExp BFalse           = return False
 
@@ -99,16 +94,6 @@ evalExp (Or e0 e1)       = evalBinary (||) e0 e1
 evalExp (Not e)          = evalUnary (not) e
 evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
-
-
-
-modifyVariable :: MonadState m => Variable -> (Int -> Int) -> m Int 
-modifyVariable x op = do n <- lookfor x
-                         (let n' = op n
-                          in (do update x n'
-                                 return n'))
-
-
 
 
 evalBinary :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
