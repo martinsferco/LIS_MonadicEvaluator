@@ -1,6 +1,6 @@
-n = 25;
+n = 26;
 i = 0;
 t = 0; 
-repeat (!(t < n)) {i = i + 1; 
+repeat ((t < n)) {i = i + 1; 
                       t = i * i} 
 

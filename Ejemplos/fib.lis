@@ -1,4 +1,4 @@
-n = 6; // N-esimo numero de fibonacci
+n = 17; // N-esimo numero de fibonacci
 
 if n == 0 { result = 0 } else {
 if n == 1 { result = 1 } else {
@@ -7,7 +7,7 @@ a = 0;
 b = 1;
 i = 2;
 
-repeat (i > n){
+repeat (i < n + 1){
 
     temp = a + b;
     a = b;
