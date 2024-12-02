@@ -32,7 +32,7 @@ newtype StateErrorTrace a = StateErrorTrace { runStateErrorTrace :: Env -> Eithe
 
 
 instance Monad StateErrorTrace where
-  return x = StateErrorTrace (\s -> Right ((x :!: s) :!: emptyTrace))
+  return x = StateErrorTrace (\s -> return ((x :!: s) :!: emptyTrace))
   m >>= f  = StateErrorTrace (\s -> do ((a :!: s') :!: w)    <- runStateErrorTrace m s
                                        ((a' :!: s'') :!: w') <- runStateErrorTrace (f a) s'
                                        return ((a' :!: s'') :!: w ++ w'))
@@ -50,7 +50,7 @@ instance MonadTrace StateErrorTrace where
 
 -- Ejercicio 3.d: Dar una instancia de MonFadError para StateErrorTrace.
 instance MonadError StateErrorTrace where
-  throw e = StateErrorTrace (\s -> Left e)
+  throw e = StateErrorTrace (\_ -> Left e)
 
 -- Ejercicio 3.e: Dar una instancia de MonadState para StateErrorTrace.
 instance MonadState StateErrorTrace where
@@ -89,6 +89,7 @@ stepComm (Seq c0 c1)          = do c0' <- stepComm c0
 stepComm (IfThenElse b c0 c1) = do vb <- evalExp b
                                    if vb then return c0 else return c1
 
+-- Ejecutamos una vez c y luego, si se cumple b, seguimos repitiendo.
 stepComm (Repeat b c)         = return (Seq c c')
                                 where c' = (IfThenElse b (Repeat b c) Skip)
 

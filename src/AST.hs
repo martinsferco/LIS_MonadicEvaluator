@@ -24,6 +24,7 @@ data Exp a where
   Not ::Exp Bool -> Exp Bool
   Eq ::Exp Int -> Exp Int -> Exp Bool
   NEq ::Exp Int -> Exp Int -> Exp Bool
+  -- Los mantenemos para evitar errores del parser
   EAssgn :: Variable -> Exp Int -> Exp Int
   ESeq :: Exp Int -> Exp Int -> Exp Int
 

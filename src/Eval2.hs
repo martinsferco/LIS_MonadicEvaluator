@@ -24,7 +24,6 @@ initEnv = M.empty
 newtype StateError a =
   StateError { runStateError :: Env -> Either Error (Pair a Env) }
 
-
 -- Para calmar al GHC
 instance Functor StateError where
   fmap = liftM
@@ -35,15 +34,16 @@ instance Applicative StateError where
 
 -- Ejercicio 2.a: Dar una instancia de Monad para StateError:
 instance Monad StateError where
-  return x = StateError (\s -> Right (x :!: s))
-  m >>= f  = StateError (\s -> runStateError m s >>= \(x :!: s') -> 
-                               runStateError (f x) s')
+  return x = StateError (\s -> return (x :!: s))
+  m >>= f  = StateError (\s -> do (x :!: s') <- runStateError m s
+                                  runStateError (f x) s')
 
 -- Ejercicio 2.b: Dar una instancia de MonadError para StateError:
 instance MonadState StateError where
-  lookfor v = StateError (\s -> case M.lookup v s of
-                                 Nothing -> Left UndefVar
-                                 Just x  -> return (x :!: s))
+  lookfor v = StateError (\s -> lookfor' v s)
+    where lookfor' v s = case M.lookup v s of
+                          Nothing -> Left UndefVar
+                          Just x  -> return (x :!: s)
 
   update v i = StateError (\s -> return (() :!: update' v i s))
    where update' = M.insert
@@ -76,6 +76,7 @@ stepComm (Seq c0 c1)          = do c0' <- stepComm c0
 stepComm (IfThenElse b c0 c1) = do vb <- evalExp b
                                    if vb then return c0 else return c1
 
+-- Ejecutamos una vez c y luego, si se cumple b, seguimos repitiendo.
 stepComm (Repeat b c)         = return (Seq c c')
                                 where c' = (IfThenElse b (Repeat b c) Skip)
 

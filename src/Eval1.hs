@@ -28,7 +28,8 @@ newtype State a = State { runState :: Env -> Pair a Env }
 
 instance Monad State where
   return x = State (\s -> (x :!: s))
-  m >>= f  = State (\s -> let (v :!: s') = runState m s in runState (f v) s')
+  m >>= f  = State (\s -> let (v :!: s') = runState m s
+                          in runState (f v) s')
 
 -- Para calmar al GHC
 instance Functor State where
@@ -69,6 +70,7 @@ stepComm (Seq c0 c1)          = do c0' <- stepComm c0
 stepComm (IfThenElse b c0 c1) = do vb <- evalExp b
                                    if vb then return c0 else return c1
 
+-- Ejecutamos una vez c y luego, si se cumple b, seguimos repitiendo.
 stepComm (Repeat b c)         = return (Seq c c')
                                 where c' = (IfThenElse b (Repeat b c) Skip)
 
@@ -77,7 +79,7 @@ evalExp :: MonadState m => Exp a -> m a
 evalExp (Const n)        = return n
 evalExp (Var x)          = lookfor x
 
-evalExp (UMinus e)       = evalUnary (negate) e 
+evalExp (UMinus e)       = evalUnary  (negate) e 
 evalExp (Plus e0 e1)     = evalBinary (+)   e0 e1
 evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
 evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
@@ -91,7 +93,7 @@ evalExp (Gt e0 e1)       = evalBinary (>) e0 e1
 
 evalExp (And e0 e1)      = evalBinary (&&) e0 e1
 evalExp (Or e0 e1)       = evalBinary (||) e0 e1
-evalExp (Not e)          = evalUnary (not) e
+evalExp (Not e)          = evalUnary  (not)   e
 evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
 
