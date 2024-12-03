@@ -68,7 +68,6 @@ eval :: Comm -> Either Error (Env, Trace)
 eval p = do ((x :!: s) :!: w) <- runStateErrorTrace (stepCommStar p) initEnv
             return (s, w)
 
-
 -- Evalua multiples pasos de un comando, hasta alcanzar un Skip
 -- stepCommStar :: [dar el tipo segun corresponda]
 stepCommStar :: (MonadState m, MonadError m, MonadTrace m) => Comm -> m ()
@@ -95,7 +94,7 @@ stepComm (Repeat b c)         = return (Seq c c')
 
 
 -- Evalua una expresion 
-evalExp :: (MonadState m, MonadError m, MonadTrace m) => Exp a -> m a
+evalExp :: (MonadState m, MonadError m) => Exp a -> m a
 evalExp (Const n)        = return n
 evalExp (Var x)          = lookfor x
 
@@ -120,12 +119,12 @@ evalExp (Eq e0 e1)       = evalBinary (==) e0 e1
 evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
 
 
-evalBinary :: (MonadState m, MonadError m, MonadTrace m) => (a -> a -> b) -> Exp a -> Exp a -> m b
+evalBinary :: (MonadState m, MonadError m) => (a -> a -> b) -> Exp a -> Exp a -> m b
 evalBinary op e0 e1 = do v0 <- evalExp e0
                          v1 <- evalExp e1
                          return (op v0 v1)
 
-evalUnary :: (MonadState m, MonadError m, MonadTrace m) => (a -> b) -> Exp a -> m b
+evalUnary :: (MonadState m, MonadError m) => (a -> b) -> Exp a -> m b
 evalUnary op e = do v <- evalExp e
                     return (op v)
 
