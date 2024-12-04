@@ -129,4 +129,4 @@ evalUnary op e = do v <- evalExp e
                     return (op v)
 
 letMessage :: Show a => Variable -> a -> String
-letMessage x n = "Let " ++ x ++ " " ++ show n ++ " ; "
+letMessage x n = "Let " ++ x ++ " " ++ show n ++ "; "
