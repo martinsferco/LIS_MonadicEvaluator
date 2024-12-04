@@ -71,37 +71,35 @@ stepComm (IfThenElse b c0 c1) = do vb <- evalExp b
                                    if vb then return c0 else return c1
 
 -- Ejecutamos una vez c y luego, si se cumple b, seguimos repitiendo.
-stepComm (Repeat b c)         = return (Seq c c')
-                                where c' = (IfThenElse b (Repeat b c) Skip)
+stepComm r@(Repeat b c)       = return (Seq c c')
+                                  where c' = (IfThenElse b r Skip)
 
 -- Evalua una expresion
 evalExp :: MonadState m => Exp a -> m a
-evalExp (Const n)        = return n
-evalExp (Var x)          = lookfor x
+evalExp (Const      n)  = return  n
+evalExp (Var        v)  = lookfor v
+evalExp (UMinus     n)  = evalUnary  negate n
+evalExp (Plus   e0 e1)  = evalBin (+)   e0 e1
+evalExp (Minus  e0 e1)  = evalBin (-)   e0 e1
+evalExp (Times  e0 e1)  = evalBin (*)   e0 e1
+evalExp (Div    e0 e1)  = evalBin div   e0 e1
 
-evalExp (UMinus e)       = evalUnary  (negate) e 
-evalExp (Plus e0 e1)     = evalBinary (+)   e0 e1
-evalExp (Minus e0 e1)    = evalBinary (-)   e0 e1
-evalExp (Times e0 e1)    = evalBinary (*)   e0 e1
-evalExp (Div e0 e1)      = evalBinary (div) e0 e1
+evalExp BTrue           = return True
+evalExp BFalse          = return False 
 
-evalExp BTrue            = return True
-evalExp BFalse           = return False
-
-evalExp (Lt e0 e1)       = evalBinary (<) e0 e1
-evalExp (Gt e0 e1)       = evalBinary (>) e0 e1
-
-evalExp (And e0 e1)      = evalBinary (&&) e0 e1
-evalExp (Or e0 e1)       = evalBinary (||) e0 e1
-evalExp (Not e)          = evalUnary  (not)   e
-evalExp (Eq e0 e1)       = evalBinary (==) e0 e1 
-evalExp (NEq e0 e1)      = evalBinary (/=) e0 e1
+evalExp (Not        e)  = evalUnary     not e
+evalExp (Lt     e0 e1)  = evalBin (<)   e0 e1
+evalExp (Gt     e0 e1)  = evalBin (>)   e0 e1
+evalExp (And    e0 e1)  = evalBin (&&)  e0 e1
+evalExp (Or     e0 e1)  = evalBin (||)  e0 e1
+evalExp (Eq     e0 e1)  = evalBin (==)  e0 e1
+evalExp (NEq    e0 e1)  = evalBin (/=)  e0 e1
 
 
-evalBinary :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
-evalBinary op e0 e1 = do v0 <- evalExp e0
-                         v1 <- evalExp e1
-                         return (op v0 v1)
+evalBin :: MonadState m => (a -> a -> b) -> Exp a -> Exp a -> m b
+evalBin op e0 e1 = do v0 <- evalExp e0
+                      v1 <- evalExp e1
+                      return (op v0 v1)
 
 evalUnary :: MonadState m => (a -> b) -> Exp a -> m b
 evalUnary op e = do v <- evalExp e
